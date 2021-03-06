@@ -46,8 +46,8 @@
 		max7219_struct h1_max7219 =
 		{
 			.spi		= &hspi1,
-			.cs_port	= WriteStrob_GPIO_Port,
-			.cs_pin		= WriteStrob_Pin
+			.cs_port	= SPI1_CS_GPIO_Port,
+			.cs_pin		= SPI1_CS_Pin
 		};
 
 /*
