@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _H_
-#define _H_
+#ifndef DIGITAL_CLOCK_FOR_BEDROOM_INCLUDED_H_
+#define DIGITAL_CLOCK_FOR_BEDROOM_INCLUDED_H_
 
 	
 	/*
@@ -26,6 +26,22 @@
 	**************************************************************************
 	*/
 	
+	#include "stdio.h"
+	#include <string.h>
+
+	#include "main.h"
+	#include "i2c.h"
+	#include "rtc.h"
+	#include "spi.h"
+	#include "usart.h"
+
+	#include "ds3231_local_config.h"
+	#include "max7219_local_config.h"
+	#include "digital_clock_for_bedroom_local_config.h"
+	#include "i2c_techmaker_sm.h"
+	#include "ds3231_sm.h"
+	#include "max7219_4x_dot_sm.h"
+
 	/*
 	**************************************************************************
 	*								    DEFINES                     
@@ -56,6 +72,8 @@
 	**************************************************************************
 	*/
 	
+	void Digit_clock_Init (void)			;
+	void Digit_clock_Main (void)			;
+	void Set_ds3231_alarm (void) 			;
 
-
-#endif /* _H_ */
+#endif /* DIGITAL_CLOCK_FOR_BEDROOM_INCLUDED_H_ */
