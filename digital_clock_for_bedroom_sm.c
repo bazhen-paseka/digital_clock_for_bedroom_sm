@@ -38,12 +38,7 @@
 *						    LOCAL DATA TYPES
 **************************************************************************
 */
-		max7219_struct h1_max7219 =
-		{
-			.spi		= &hspi1,
-			.cs_port	= SPI1_CS_GPIO_Port,
-			.cs_pin		= SPI1_CS_Pin
-		};
+	max7219_struct 	h1_max7219 ;
 /*
 **************************************************************************
 *							  LOCAL TABLES
@@ -116,10 +111,12 @@ void Digit_clock_Init (void) {
 	ds3231_Alarm1_SetEverySeconds( ADR_I2C_DS3231 ) ;
 	ds3231_Alarm1_ClearStatusBit ( ADR_I2C_DS3231 ) ;
 
+	Max7219_struct_init (&h1_max7219, &hspi1,SPI1_CS_GPIO_Port,SPI1_CS_Pin);
 	//	max7219_test_LED( &h1_max7219 , 300 ) ;
-	HAL_GPIO_TogglePin( LED_RED_GPIO_Port , LED_RED_Pin ) ;
 	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE);
 	max7219_show_time( &h1_max7219 , 100 + soft_version_arr_int[0] , (soft_version_arr_int[1]*10 + soft_version_arr_int[2]) ) ;
+
+	HAL_GPIO_TogglePin( LED_RED_GPIO_Port , LED_RED_Pin ) ;
 	HAL_IWDG_Refresh( &hiwdg ) ;
 }
 //***************************************************************************
