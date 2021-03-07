@@ -20,15 +20,12 @@
 *							INCLUDE FILES
 **************************************************************************
 */
-
 	#include "digital_clock_for_bedroom_sm.h"
-
 /*
 **************************************************************************
 *							LOCAL DEFINES
 **************************************************************************
 */
-
 
 /*
 **************************************************************************
@@ -36,20 +33,17 @@
 **************************************************************************
 */
 
-
 /*
 **************************************************************************
 *						    LOCAL DATA TYPES
 **************************************************************************
 */
-
 		max7219_struct h1_max7219 =
 		{
 			.spi		= &hspi1,
 			.cs_port	= SPI1_CS_GPIO_Port,
 			.cs_pin		= SPI1_CS_Pin
 		};
-
 /*
 **************************************************************************
 *							  LOCAL TABLES
@@ -81,8 +75,7 @@
 **************************************************************************
 */
 
-void Digit_clock_Init (void){
-
+void Digit_clock_Init (void) {
 	int soft_version_arr_int[3];
 	soft_version_arr_int[0] = ((SOFT_VERSION) / 100) %10 ;
 	soft_version_arr_int[1] = ((SOFT_VERSION) /  10) %10 ;
@@ -93,7 +86,7 @@ void Digit_clock_Init (void){
 	int16_t version_day_i16		= VERSION_DAY	;
 
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d %d/%d/%d\r\n\tFor debug: UART1-115200/8-N-1" ,
+	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d %02d/%02d/%d\r\n\tFor debug: UART1-115200/8-N-1" ,
 			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ,
 			version_day_i16 , version_month_i16 , version_year_i16 ) ;
 	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
@@ -125,7 +118,7 @@ void Digit_clock_Init (void){
 
 	//	max7219_test_LED( &h1_max7219 , 300 ) ;
 	HAL_GPIO_TogglePin( LED_RED_GPIO_Port , LED_RED_Pin ) ;
-	max7219_init(&h1_max7219, NoDecode, Intensity_5, DisplayDigit_0_7, NormalOperation);
+	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE);
 	max7219_show_time( &h1_max7219 , 100 + soft_version_arr_int[0] , (soft_version_arr_int[1]*10 + soft_version_arr_int[2]) ) ;
 	HAL_IWDG_Refresh( &hiwdg ) ;
 }
@@ -144,7 +137,7 @@ void Digit_clock_Main (void) {
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
-		max7219_init(&h1_max7219, NoDecode, Intensity_1, DisplayDigit_0_7, NormalOperation ) ;
+		max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
 		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
 
 		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
@@ -152,11 +145,15 @@ void Digit_clock_Main (void) {
 		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 }
-//***************************************************************************
-//***************************************************************************
 
 /*
 **************************************************************************
 *                           LOCAL FUNCTIONS
+**************************************************************************
+*/
+
+/*
+**************************************************************************
+*                                   END
 **************************************************************************
 */
