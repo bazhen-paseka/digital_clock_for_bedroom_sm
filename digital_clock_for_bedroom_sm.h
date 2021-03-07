@@ -34,6 +34,7 @@
 	#include "rtc.h"
 	#include "spi.h"
 	#include "usart.h"
+	#include "iwdg.h"
 
 	#include "ds3231_local_config.h"
 	#include "max7219_local_config.h"
