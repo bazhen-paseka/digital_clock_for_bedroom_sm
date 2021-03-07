@@ -68,7 +68,6 @@
 *						    GLOBAL VARIABLES
 **************************************************************************
 */
-	volatile uint8_t ds3231_alarm_u8 			= 0 ;
 
 /*
 **************************************************************************
@@ -89,9 +88,14 @@ void Digit_clock_Init (void){
 	soft_version_arr_int[1] = ((SOFT_VERSION) /  10) %10 ;
 	soft_version_arr_int[2] = ((SOFT_VERSION)      ) %10 ;
 
+	int16_t version_year_i16	= VERSION_YEAR	;
+	int16_t version_month_i16 	= VERSION_MONTH	;
+	int16_t version_day_i16		= VERSION_DAY	;
+
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d 2021-MAR-06\r\n\tFor debug: UART1-115200/8-N-1" ,
-			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ) ;
+	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d %d/%d/%d\r\n\tFor debug: UART1-115200/8-N-1" ,
+			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ,
+			version_day_i16 , version_month_i16 , version_year_i16 ) ;
 	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
 
 	I2Cdev_init( &hi2c1 ) ;
@@ -128,7 +132,7 @@ void Digit_clock_Init (void){
 //***************************************************************************
 
 void Digit_clock_Main (void) {
-	if (ds3231_alarm_u8 == 1) {
+	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
 		RTC_TimeTypeDef TimeSt;
 		RTC_DateTypeDef DateSt;
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
@@ -144,18 +148,11 @@ void Digit_clock_Main (void) {
 		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
 
 		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
-		ds3231_alarm_u8 = 0 ;
+		Ds3231_hard_alarm_flag_Reset() ;
 		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 }
 //***************************************************************************
-
-void Set_ds3231_alarm (void) {
-	ds3231_alarm_u8 = 1 ;
-}
-//***************************************************************************
-
-
 //***************************************************************************
 
 /*
