@@ -213,12 +213,16 @@ void Digit_clock_Main (void) {
 
 
 	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
+		char DataChar[10] ;
+		uint32_t light_u32 = ADC1_GetValue(&hadc1, 1);
+		sprintf(DataChar,"ADC=%u\r\n", (int)light_u32) ;
+		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
 		ds3231_PrintDate( &DateSt, &huart1 ) ;
 		ds3231_PrintTime( &TimeSt, &huart1 ) ;
-		char DataChar[10] ;
+
 		sprintf(DataChar,"\r") ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 

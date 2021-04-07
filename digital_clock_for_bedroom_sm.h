@@ -40,6 +40,7 @@
 	#include "i2c_techmaker_sm.h"
 	#include "ds3231_sm.h"
 	#include "max7219_4x_dot_sm.h"
+	#include "adc_light_stm32f103_hal_sm.h"
 
 /*
 **************************************************************************
