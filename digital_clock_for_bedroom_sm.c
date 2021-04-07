@@ -64,9 +64,7 @@
 *                        LOCAL FUNCTION PROTOTYPES
 **************************************************************************
 */
-
 	void _beeper( uint32_t _time_u32 ) ;
-
 /*
 **************************************************************************
 *                           GLOBAL FUNCTIONS
@@ -97,9 +95,9 @@ void Digit_clock_Init (void) {
 	RTC_DateTypeDef DateSt ;
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-	if ( TimeSt.Hours == 10 ) {
-		Set_Day_and_Time_to_DS3231( 2021, 03, 12, 00, 45, 45 ) ;
-	}
+//	if ( TimeSt.Hours == 10 ) {
+//		Set_Day_and_Time_to_DS3231( 2021, 03, 12, 00, 45, 45 ) ;
+//	}
 
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
@@ -131,21 +129,20 @@ void Digit_clock_Main (void) {
 	RTC_DateTypeDef 	DateSt ;
 
 	if ( button_u8 == 1 ) {
-		_beeper( 100 ) ;
+		_beeper( BEEPER_DELAY ) ;
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
 		TimeSt.Hours++ ;
 		if ( TimeSt.Hours >= 24 ) TimeSt.Hours = 0 ;
 		Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
 		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-		HAL_Delay( 200 ) ;
+		HAL_Delay( BUTTON_DELAY ) ;
 		button_u8 = 0 ;
 		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 
 	if ( button_u8 == 2 ) {
-		_beeper( 100 ) ;
-
+		_beeper( BEEPER_DELAY ) ;
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
 		if ( TimeSt.Hours == 0 ) {
@@ -153,64 +150,61 @@ void Digit_clock_Main (void) {
 		} else {
 			TimeSt.Hours-- ;
 		}
-
 		Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
 		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-		HAL_Delay( 200 ) ;
+		HAL_Delay( BUTTON_DELAY ) ;
 		button_u8 = 0 ;
 		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 
 	if ( button_u8 == 3 ) {
-		_beeper( 100 ) ;
-
+		_beeper( BEEPER_DELAY ) ;
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		TimeSt.Minutes++ ;
-		if ( TimeSt.Minutes >=60 ) TimeSt.Minutes = 0;
-		Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
-		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-		HAL_Delay( 200 ) ;
+		max7219_show_time( &h1_max7219 , 99 , 99 ) ;
+		HAL_Delay( BUTTON_DELAY ) ;
 		button_u8 = 0 ;
 		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 
 	if ( button_u8 == 4 ) {
-		_beeper( 100 ) ;
+		_beeper( BEEPER_DELAY ) ;
 
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		if ( TimeSt.Minutes <=0 ) {
-			TimeSt.Minutes = 59 ;
-		} else {
-		TimeSt.Minutes--;
-		}
-		Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
-		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-		HAL_Delay( 200 ) ;
+		max7219_show_time( &h1_max7219 , 00 , 00 ) ;
+		HAL_Delay( BUTTON_DELAY ) ;
 		button_u8 = 0 ;
 		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 
 	if ( button_u8 == 5 ) {
-		if ( HAL_GPIO_ReadPin( BUTTON_5_GPIO_Port, BUTTON_5_Pin ) == GPIO_PIN_RESET ) {
-			_beeper( 100 ) ;
+		if ( HAL_GPIO_ReadPin( BUTTON_6_GPIO_Port, BUTTON_6_Pin ) == GPIO_PIN_RESET ) {
+			_beeper( BEEPER_DELAY ) ;
 			ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 			ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-			//max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-			max7219_show_time( &h1_max7219 , 22 , 44 ) ;
-			HAL_Delay( 200 ) ;
+			TimeSt.Minutes++ ;
+			if ( TimeSt.Minutes >=60 ) TimeSt.Minutes = 0;
+			Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
+			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+			HAL_Delay( BUTTON_DELAY ) ;
 			button_u8 = 0 ;
 			HAL_IWDG_Refresh( &hiwdg ) ;
 		}
 
-		if ( HAL_GPIO_ReadPin( BUTTON_6_GPIO_Port, BUTTON_6_Pin ) == GPIO_PIN_RESET ) {
-			_beeper( 100 ) ;
+		if ( HAL_GPIO_ReadPin( BUTTON_5_GPIO_Port, BUTTON_5_Pin ) == GPIO_PIN_RESET ) {
+			_beeper( BEEPER_DELAY ) ;
+
 			ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 			ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-			//max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-			max7219_show_time( &h1_max7219 , 11 , 55 ) ;
-			HAL_Delay( 200 ) ;
+			if ( TimeSt.Minutes <=0 ) {
+				TimeSt.Minutes = 59 ;
+			} else {
+			TimeSt.Minutes--;
+			}
+			Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
+			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+			HAL_Delay( BUTTON_DELAY ) ;
 			button_u8 = 0 ;
 			HAL_IWDG_Refresh( &hiwdg ) ;
 		}
