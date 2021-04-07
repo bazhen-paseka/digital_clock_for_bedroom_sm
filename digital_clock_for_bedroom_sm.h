@@ -72,6 +72,7 @@
 */
 	void Digit_clock_Init (void) ;
 	void Digit_clock_Main (void) ;
+	void Digit_clock_Set_button(uint8_t _button) ;
 /*
 **************************************************************************
 *                                   END
