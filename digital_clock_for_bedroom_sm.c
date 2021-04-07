@@ -64,6 +64,8 @@
 **************************************************************************
 */
 
+	void _beeper( uint32_t _time_u32 ) ;
+
 /*
 **************************************************************************
 *                           GLOBAL FUNCTIONS
@@ -71,6 +73,7 @@
 */
 
 void Digit_clock_Init (void) {
+	_beeper( 100 ) ;
 	int soft_version_arr_int[3];
 	soft_version_arr_int[0] = ((SOFT_VERSION) / 100) %10 ;
 	soft_version_arr_int[1] = ((SOFT_VERSION) /  10) %10 ;
@@ -93,8 +96,8 @@ void Digit_clock_Init (void) {
 	RTC_DateTypeDef DateSt ;
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-	if ( TimeSt.Hours == 0 ) {
-		Set_Day_and_Time_to_DS3231( 2021, 03, 06, 17, 41, 01 ) ;
+	if ( TimeSt.Hours == 10 ) {
+		Set_Day_and_Time_to_DS3231( 2021, 03, 12, 00, 45, 45 ) ;
 	}
 
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
@@ -107,7 +110,7 @@ void Digit_clock_Init (void) {
 	sprintf( DataChar , "\r\n" ) ;
 	HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
 
-	//	ds3231_Alarm1_SetSeconds(ADR_I2C_DS3231, 0x00) ;
+	//ds3231_Alarm1_SetSeconds(ADR_I2C_DS3231, 0x00) ;
 	ds3231_Alarm1_SetEverySeconds( ADR_I2C_DS3231 ) ;
 	ds3231_Alarm1_ClearStatusBit ( ADR_I2C_DS3231 ) ;
 
@@ -122,25 +125,28 @@ void Digit_clock_Init (void) {
 //***************************************************************************
 
 void Digit_clock_Main (void) {
-	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
-		RTC_TimeTypeDef TimeSt;
-		RTC_DateTypeDef DateSt;
-		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
-		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		ds3231_PrintDate( &DateSt, &huart1 ) ;
-		ds3231_PrintTime( &TimeSt, &huart1 ) ;
-		char DataChar[10];
-		sprintf(DataChar,"\r") ;
-		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
-		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
-		max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
-		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+	if ( Ds3231_hard_alarm_flag_Status() == 0 ) {	return ;	}
 
-		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
-		Ds3231_hard_alarm_flag_Reset() ;
-		HAL_IWDG_Refresh( &hiwdg ) ;
-	}
+	RTC_TimeTypeDef		TimeSt ;
+	RTC_DateTypeDef 	DateSt ;
+	ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
+	ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
+	ds3231_PrintDate( &DateSt, &huart1 ) ;
+	ds3231_PrintTime( &TimeSt, &huart1 ) ;
+	char DataChar[10] ;
+	sprintf(DataChar,"\r") ;
+	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+
+	HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
+	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
+	max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+
+	//	_beeper( 100 ) ;
+
+	ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
+	Ds3231_hard_alarm_flag_Reset() ;
+	HAL_IWDG_Refresh( &hiwdg ) ;
 }
 
 /*
@@ -148,6 +154,13 @@ void Digit_clock_Main (void) {
 *                           LOCAL FUNCTIONS
 **************************************************************************
 */
+
+void _beeper( uint32_t _time_u32 ) {
+	HAL_GPIO_WritePin( BEEPER_1_GPIO_Port , BEEPER_1_Pin , RESET ) ;
+	HAL_Delay( _time_u32 ) ;
+	HAL_GPIO_WritePin( BEEPER_1_GPIO_Port , BEEPER_1_Pin , SET ) ;
+}
+/***************************************************************************************/
 
 /*
 **************************************************************************
