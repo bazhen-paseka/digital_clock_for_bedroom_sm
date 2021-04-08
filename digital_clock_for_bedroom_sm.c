@@ -57,8 +57,11 @@
 *						    GLOBAL VARIABLES
 **************************************************************************
 */
-
 	uint8_t button_u8 = 0 ;
+
+	uint8_t Alarm_flag = 0 ;
+	uint8_t AlarmHour = 0 ;
+	uint8_t AlarmMin  = 0 ;
 /*
 **************************************************************************
 *                        LOCAL FUNCTION PROTOTYPES
@@ -102,15 +105,11 @@ void Digit_clock_Init (void) {
 
 	DS3231_TimeTypeDef TimeSt ;
 	DS3231_DateTypeDef DateSt ;
-	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
-	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-//	if ( TimeSt.Hours == 0 ) {
-//		Set_Day_and_Time_to_DS3231( 2021, 4, 8, 1, 0, 55, 20 ) ;
-//	}
+
+	//	Set_Date_and_Time_to_DS3231( 2021, 3, 8, 1, 3, 22, 40 ) ;
 
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-
 
 	ds3231_PrintDate( 		&DateSt , &huart1 ) ;
 	ds3231_PrintWeek3char(	&DateSt , &huart1 ) ;
@@ -133,95 +132,119 @@ void Digit_clock_Init (void) {
 //***************************************************************************
 
 void Digit_clock_Main (void) {
-
+	char DataChar[100];
 	DS3231_TimeTypeDef		TimeSt ;
 	DS3231_DateTypeDef	 	DateSt ;
 
-	if ( button_u8 == 1 ) {
+	if ( button_u8 > 0 ) {
+
 		_beeper( BEEPER_DELAY ) ;
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		TimeSt.Hours++ ;
-		if ( TimeSt.Hours >= 24 ) TimeSt.Hours = 0 ;
-		Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
-		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-		HAL_Delay( BUTTON_DELAY ) ;
-		button_u8 = 0 ;
-		HAL_IWDG_Refresh( &hiwdg ) ;
-	}
 
-	if ( button_u8 == 2 ) {
-		_beeper( BEEPER_DELAY ) ;
-		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
-		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		if ( TimeSt.Hours == 0 ) {
-			TimeSt.Hours = 23 ;
-		} else {
-			TimeSt.Hours-- ;
-		}
-		Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
-		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-		HAL_Delay( BUTTON_DELAY ) ;
-		button_u8 = 0 ;
-		HAL_IWDG_Refresh( &hiwdg ) ;
-	}
-
-	if ( button_u8 == 3 ) {
-		_beeper( BEEPER_DELAY ) ;
-		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
-		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		max7219_show_time( &h1_max7219 , 99 , 99 ) ;
-		HAL_Delay( BUTTON_DELAY ) ;
-		button_u8 = 0 ;
-		HAL_IWDG_Refresh( &hiwdg ) ;
-	}
-
-	if ( button_u8 == 4 ) {
-		_beeper( BEEPER_DELAY ) ;
-
-		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
-		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		max7219_show_time( &h1_max7219 , 00 , 00 ) ;
-		HAL_Delay( BUTTON_DELAY ) ;
-		button_u8 = 0 ;
-		HAL_IWDG_Refresh( &hiwdg ) ;
-	}
-
-	if ( button_u8 == 5 ) {
-		if ( HAL_GPIO_ReadPin( BUTTON_6_GPIO_Port, BUTTON_6_Pin ) == GPIO_PIN_RESET ) {
-			_beeper( BEEPER_DELAY ) ;
-			ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
-			ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-			TimeSt.Minutes++ ;
-			if ( TimeSt.Minutes >=60 ) TimeSt.Minutes = 0;
-			Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
+		if ( button_u8 == 1 ) {
+			if ( TimeSt.Hours >= 24 ) {
+				TimeSt.Hours = 0 ;
+			} else {
+				TimeSt.Hours++ ;
+			}
+			ds3231_SetTime( ADR_I2C_DS3231, &TimeSt ) ;
 			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-			HAL_Delay( BUTTON_DELAY ) ;
-			button_u8 = 0 ;
+		}
+
+		if ( button_u8 == 2 ) {
+			if ( TimeSt.Hours == 0 ) {
+				TimeSt.Hours = 23 ;
+			} else {
+				TimeSt.Hours-- ;
+			}
+			ds3231_SetTime( ADR_I2C_DS3231, &TimeSt ) ;
+			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+		}
+
+		if ( button_u8 == 3 ) {
+			if ( Alarm_flag == 1 ) {
+				AlarmHour = AlarmHour + ALARM_PERIOD_HOUR ;
+				if ( AlarmHour >= 24 ) {
+					AlarmHour = AlarmHour - 24 ;
+				}
+				AlarmMin  = AlarmMin + ALARM_PERIOD_MIN ;
+				if ( AlarmMin >= 60 ) {
+					AlarmMin = AlarmMin - 60 ;
+					AlarmHour++ ;
+					if ( AlarmHour >= 24 ) {
+						AlarmHour = AlarmHour - 24 ;
+					}
+				}
+			}
+
+			if ( Alarm_flag == 0 ) {
+				Alarm_flag = 1 ;
+
+				AlarmHour = TimeSt.Hours + ALARM_PERIOD_HOUR ;
+				if ( AlarmHour >= 24 ) {
+					AlarmHour = AlarmHour - 24 ;
+				}
+
+				AlarmMin  = TimeSt.Minutes + ALARM_PERIOD_MIN ;
+				if ( AlarmMin >= 60 ) {
+					AlarmMin = AlarmMin - 60 ;
+					AlarmHour++ ;
+					if ( AlarmHour >= 24 ) {
+						AlarmHour = AlarmHour - 24 ;
+					}
+				}
+			}
+
+			max7219_show_time( &h1_max7219 , AlarmHour , AlarmMin ) ;
+			sprintf( DataChar , "\r\nAlarm Set %02d:%02d:00\r\n",  AlarmHour , AlarmMin ) ;
+			HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+			HAL_Delay( 1000 ) ;
 			HAL_IWDG_Refresh( &hiwdg ) ;
 		}
 
-		if ( HAL_GPIO_ReadPin( BUTTON_5_GPIO_Port, BUTTON_5_Pin ) == GPIO_PIN_RESET ) {
-			_beeper( BEEPER_DELAY ) ;
+		if ( button_u8 == 4 ) {
+			Alarm_flag = 0 ;
+			max7219_show_time( &h1_max7219 , 00 , 00 ) ;
+			sprintf( DataChar , "\r\nAlarm Off\r\n" ) ;
+			HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+		}
 
-			ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
-			ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
+		if ( button_u8 == 5 ) {
 			if ( TimeSt.Minutes <=0 ) {
 				TimeSt.Minutes = 59 ;
 			} else {
-			TimeSt.Minutes--;
+				TimeSt.Minutes--;
 			}
-			Set_Date_and_Time_by_str( &DateSt, &TimeSt ) ;
+			ds3231_SetTime( ADR_I2C_DS3231, &TimeSt ) ;
 			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-			HAL_Delay( BUTTON_DELAY ) ;
-			button_u8 = 0 ;
-			HAL_IWDG_Refresh( &hiwdg ) ;
 		}
 
+		if ( button_u8 == 6 ) {
+			if ( TimeSt.Minutes >= 60 ) {
+				TimeSt.Minutes = 0;
+			} else {
+				TimeSt.Minutes++ ;
+			}
+			ds3231_SetTime( ADR_I2C_DS3231, &TimeSt ) ;
+			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+		}
+
+		HAL_Delay( BUTTON_DELAY ) ;
+		button_u8 = 0 ;
+		HAL_IWDG_Refresh( &hiwdg ) ;
 	}
 
-
 	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
+
+		if ((	TimeSt.Hours	== AlarmHour)
+			&&( TimeSt.Minutes	== AlarmMin	)
+			&&( Alarm_flag		== 1		)) {
+			_beeper( BEEPER_DELAY ) ;
+			HAL_Delay( BUTTON_DELAY ) ;
+			_beeper( BEEPER_DELAY ) ;
+		}
+
 		char DataChar[10] ;
 		sprintf(DataChar,"\r") ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
