@@ -83,10 +83,19 @@ void Digit_clock_Init (void) {
 	int16_t version_day_i16		= VERSION_DAY	;
 
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d %02d/%02d/%d\r\n\tFor debug: UART1-115200/8-N-1" ,
+	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d %02d/%02d/%d" ,
 			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ,
 			version_day_i16 , version_month_i16 , version_year_i16 ) ;
 	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+
+	#define DATE_as_int_str 	(__DATE__)
+	#define TIME_as_int_str 	(__TIME__)
+	sprintf(DataChar,"\r\n\tBuild: %s, time: %s." , DATE_as_int_str , TIME_as_int_str ) ;
+	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+
+	sprintf(DataChar,"\r\n\tFor debug: UART1-115200/8-N-1" ) ;
+	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+
 
 	I2Cdev_init( &hi2c1 ) ;
 	I2C_ScanBusFlow( &hi2c1 , &huart1 ) ;
@@ -95,17 +104,18 @@ void Digit_clock_Init (void) {
 	RTC_DateTypeDef DateSt ;
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-//	if ( TimeSt.Hours == 10 ) {
-//		Set_Day_and_Time_to_DS3231( 2021, 03, 12, 00, 45, 45 ) ;
+//	if ( TimeSt.Hours == 0 ) {
+//		Set_Day_and_Time_to_DS3231( 2021, 4, 8, 1, 0, 55, 20 ) ;
 //	}
 
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-	HAL_RTC_SetTime( &hrtc , &TimeSt , RTC_FORMAT_BIN ) ;
-	HAL_RTC_SetDate( &hrtc , &DateSt , RTC_FORMAT_BIN );
+//	HAL_RTC_SetTime( &hrtc , &TimeSt , RTC_FORMAT_BIN ) ;
+//	HAL_RTC_SetDate( &hrtc , &DateSt , RTC_FORMAT_BIN );
 
-	ds3231_PrintDate( &DateSt , &huart1 ) ;
-	ds3231_PrintTime( &TimeSt , &huart1 ) ;
+	ds3231_PrintDate( 		&DateSt , &huart1 ) ;
+	ds3231_PrintWeek3char(	&DateSt , &huart1 ) ;
+	ds3231_PrintTime( 		&TimeSt , &huart1 ) ;
 	sprintf( DataChar , "\r\n" ) ;
 	HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
 
@@ -214,17 +224,24 @@ void Digit_clock_Main (void) {
 
 	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
 		char DataChar[10] ;
-		uint32_t light_u32 = ADC1_GetValue(&hadc1, 1);
-		sprintf(DataChar,"ADC=%u\r\n", (int)light_u32) ;
+		sprintf(DataChar,"\r") ;
+		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+
+		uint32_t light_u32 = ADC1_GetValue(&hadc1, 1) ;
+		if ((light_u32 > 9999 ) || (light_u32 < 3300 ))
+		{
+			light_u32 = 9999 ;
+		} else {
+			light_u32 = light_u32- 3300 ;
+		}
+		sprintf(DataChar,"L:%04i; ", (int)light_u32) ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		ds3231_PrintDate( &DateSt, &huart1 ) ;
-		ds3231_PrintTime( &TimeSt, &huart1 ) ;
-
-		sprintf(DataChar,"\r") ;
-		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+		ds3231_PrintDate(		&DateSt, &huart1 ) ;
+		ds3231_PrintWeek3char(	&DateSt, &huart1 ) ;
+		ds3231_PrintTime( 		&TimeSt, &huart1 ) ;
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
 		max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
