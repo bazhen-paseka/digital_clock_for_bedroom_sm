@@ -90,7 +90,7 @@ void Digit_clock_Init (void) {
 
 	#define DATE_as_int_str 	(__DATE__)
 	#define TIME_as_int_str 	(__TIME__)
-	sprintf(DataChar,"\r\n\tBuild: %s, time: %s." , DATE_as_int_str , TIME_as_int_str ) ;
+	sprintf(DataChar,"\r\n\tBuild: %s. Time: %s." , DATE_as_int_str , TIME_as_int_str ) ;
 	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
 
 	sprintf(DataChar,"\r\n\tFor debug: UART1-115200/8-N-1" ) ;
@@ -100,8 +100,8 @@ void Digit_clock_Init (void) {
 	I2Cdev_init( &hi2c1 ) ;
 	I2C_ScanBusFlow( &hi2c1 , &huart1 ) ;
 
-	RTC_TimeTypeDef TimeSt ;
-	RTC_DateTypeDef DateSt ;
+	DS3231_TimeTypeDef TimeSt ;
+	DS3231_DateTypeDef DateSt ;
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
 //	if ( TimeSt.Hours == 0 ) {
@@ -110,8 +110,7 @@ void Digit_clock_Init (void) {
 
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
-//	HAL_RTC_SetTime( &hrtc , &TimeSt , RTC_FORMAT_BIN ) ;
-//	HAL_RTC_SetDate( &hrtc , &DateSt , RTC_FORMAT_BIN );
+
 
 	ds3231_PrintDate( 		&DateSt , &huart1 ) ;
 	ds3231_PrintWeek3char(	&DateSt , &huart1 ) ;
@@ -135,8 +134,8 @@ void Digit_clock_Init (void) {
 
 void Digit_clock_Main (void) {
 
-	RTC_TimeTypeDef		TimeSt ;
-	RTC_DateTypeDef 	DateSt ;
+	DS3231_TimeTypeDef		TimeSt ;
+	DS3231_DateTypeDef	 	DateSt ;
 
 	if ( button_u8 == 1 ) {
 		_beeper( BEEPER_DELAY ) ;
