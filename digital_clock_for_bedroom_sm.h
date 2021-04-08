@@ -29,7 +29,6 @@
 
 	#include "main.h"
 	#include "i2c.h"
-	#include "rtc.h"
 	#include "spi.h"
 	#include "usart.h"
 	#include "iwdg.h"
@@ -40,6 +39,7 @@
 	#include "i2c_techmaker_sm.h"
 	#include "ds3231_sm.h"
 	#include "max7219_4x_dot_sm.h"
+	#include "adc_light_stm32f103_hal_sm.h"
 
 /*
 **************************************************************************
@@ -72,6 +72,7 @@
 */
 	void Digit_clock_Init (void) ;
 	void Digit_clock_Main (void) ;
+	void Digit_clock_Set_button(uint8_t _button) ;
 /*
 **************************************************************************
 *                                   END
