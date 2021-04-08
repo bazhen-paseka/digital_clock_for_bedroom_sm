@@ -105,14 +105,12 @@ void Digit_clock_Init (void) {
 
 	DS3231_TimeTypeDef TimeSt ;
 	DS3231_DateTypeDef DateSt ;
-
-	//	Set_Date_and_Time_to_DS3231( 2021, 3, 8, 1, 3, 22, 40 ) ;
-
+	//	Set_Date_and_Time_to_DS3231( 2021, 3, 8, 4, 3, 52, 40 ) ;
 	ds3231_GetTime( ADR_I2C_DS3231 , &TimeSt ) ;
 	ds3231_GetDate( ADR_I2C_DS3231 , &DateSt ) ;
 
 	ds3231_PrintDate( 		&DateSt , &huart1 ) ;
-	ds3231_PrintWeek3char(	&DateSt , &huart1 ) ;
+	ds3231_PrintWeek_3Char(	&DateSt , &huart1 ) ;
 	ds3231_PrintTime( 		&TimeSt , &huart1 ) ;
 	sprintf( DataChar , "\r\n" ) ;
 	HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
@@ -245,28 +243,29 @@ void Digit_clock_Main (void) {
 			_beeper( BEEPER_DELAY ) ;
 		}
 
-		char DataChar[10] ;
+		char DataChar[20] ;
 		sprintf(DataChar,"\r") ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
-		uint32_t light_u32 = ADC1_GetValue(&hadc1, 1) ;
-		if ((light_u32 > 9999 ) || (light_u32 < 3300 ))
-		{
-			light_u32 = 9999 ;
-		} else {
-			light_u32 = light_u32- 3300 ;
-		}
-		sprintf(DataChar,"L:%04i; ", (int)light_u32) ;
+		uint32_t light_u32 = ADC1_GetValue(&hadc1, 1) 	;
+		max7219_LED_Intensity	intensity_u8 = Intensity_1 ;
+		if (( light_u32 < LIGHT_LEVEL_0 ))										intensity_u8 = Intensity_1	;
+		if (( light_u32 >= LIGHT_LEVEL_0 ) && ( light_u32 < LIGHT_LEVEL_1 ))	intensity_u8 = Intensity_3	;
+		if (( light_u32 >= LIGHT_LEVEL_1 ) && ( light_u32 < LIGHT_LEVEL_2 ))	intensity_u8 = Intensity_5	;
+		if (( light_u32 >= LIGHT_LEVEL_2 ))										intensity_u8 = Intensity_7	;
+
+		sprintf(DataChar,"L=%04i; I=%02d;  ", (int)light_u32 , (int)intensity_u8 ) ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
-		ds3231_PrintDate(		&DateSt, &huart1 ) ;
-		ds3231_PrintWeek3char(	&DateSt, &huart1 ) ;
-		ds3231_PrintTime( 		&TimeSt, &huart1 ) ;
+		ds3231_PrintDate_AllChar(	&DateSt, &huart1 ) ;
+		ds3231_PrintWeek_AllChar(	&DateSt, &huart1 ) ;
+		ds3231_PrintTime( 			&TimeSt, &huart1 ) ;
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
-		max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
+		//max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
+		max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, WORK_MODE ) ;
 		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
 
 		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
