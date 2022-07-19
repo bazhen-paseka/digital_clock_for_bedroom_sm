@@ -265,9 +265,14 @@ void Digit_clock_Main (void) {
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
 		//max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
-		max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, WORK_MODE ) ;
-		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
 
+		if (( TimeSt.Hours > START_SHOW_HOUR ) && ( TimeSt.Hours < FINISH_SHOW_HOUR )) {
+			max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, WORK_MODE ) ;
+			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+		} else {
+			max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, OFF_MODE ) ;
+			//max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+		}
 		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
 		Ds3231_hard_alarm_flag_Reset() ;
 		HAL_IWDG_Refresh( &hiwdg ) ;
