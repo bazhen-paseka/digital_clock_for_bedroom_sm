@@ -58,10 +58,6 @@
 **************************************************************************
 */
 	uint8_t button_u8 = 0 ;
-
-//	uint8_t Alarm_flag = 0 ;
-//	uint8_t AlarmHour = 0 ;
-//	uint8_t AlarmMin  = 0 ;
 	uint8_t night_mode_flag = 0 ;
 /*
 **************************************************************************
@@ -87,7 +83,7 @@ void Digit_clock_Init (void) {
 	int16_t version_day_i16		= VERSION_DAY	;
 
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\r\n\tDigital clock for bedroom v%d.%d.%d %02d/%02d/%d" ,
+	sprintf(DataChar,"\r\n\r\n\tDIEGO - dot clock for bedroom v%d.%d.%d %02d/%02d/%d" ,
 			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ,
 			version_day_i16 , version_month_i16 , version_year_i16 ) ;
 	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
@@ -166,49 +162,9 @@ void Digit_clock_Main (void) {
 			max7219_show_time( &h1_max7219, START_NIGHT_MODE_HOUR, FINISH_NIGHT_MODE_HOUR ) ;
 			sprintf( DataChar , "\r\n Night mode - On\r\n" ) ;
 			HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
-			//	HAL_IWDG_Refresh( &hiwdg ) ;
 		}
 
-//			if ( Alarm_flag == 1 ) {
-//				AlarmHour = AlarmHour + ALARM_PERIOD_HOUR ;
-//				if ( AlarmHour >= 24 ) {
-//					AlarmHour = AlarmHour - 24 ;
-//				}
-//				AlarmMin  = AlarmMin + ALARM_PERIOD_MIN ;
-//				if ( AlarmMin >= 60 ) {
-//					AlarmMin = AlarmMin - 60 ;
-//					AlarmHour++ ;
-//					if ( AlarmHour >= 24 ) {
-//						AlarmHour = AlarmHour - 24 ;
-//					}
-//				}
-//			}
-
-//			if ( Alarm_flag == 0 ) {
-//				Alarm_flag = 1 ;
-//
-//				AlarmHour = TimeSt.Hours + ALARM_PERIOD_HOUR ;
-//				if ( AlarmHour >= 24 ) {
-//					AlarmHour = AlarmHour - 24 ;
-//				}
-//
-//				AlarmMin  = TimeSt.Minutes + ALARM_PERIOD_MIN ;
-//				if ( AlarmMin >= 60 ) {
-//					AlarmMin = AlarmMin - 60 ;
-//					AlarmHour++ ;
-//					if ( AlarmHour >= 24 ) {
-//						AlarmHour = AlarmHour - 24 ;
-//					}
-//				}
-//			}
-
-//			max7219_show_time( &h1_max7219 , AlarmHour , AlarmMin ) ;
-//			sprintf( DataChar , "\r\nAlarm Set %02d:%02d:00\r\n",  AlarmHour , AlarmMin ) ;
-//			HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
-//			HAL_Delay( 1000 ) ;
-
 		if ( button_u8 == 4 ) {
-			//Alarm_flag = 0 ;
 			night_mode_flag = 0 ;
 			max7219_show_time( &h1_max7219 , 00 , 00 ) ;
 			sprintf( DataChar , "\r\n Night mode - Off\r\n" ) ;
@@ -241,16 +197,7 @@ void Digit_clock_Main (void) {
 	}
 
 	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
-
-//		if ((	TimeSt.Hours	== AlarmHour)
-//			&&( TimeSt.Minutes	== AlarmMin	)
-//			&&( Alarm_flag		== 1		)) {
-//			_beeper( BEEPER_DELAY ) ;
-//			HAL_Delay( BUTTON_DELAY ) ;
-//			_beeper( BEEPER_DELAY ) ;
-//		}
-
-		char DataChar[20] ;
+		char DataChar[100] ;
 		sprintf(DataChar,"\r") ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
@@ -271,16 +218,6 @@ void Digit_clock_Main (void) {
 		ds3231_PrintTime( 			&TimeSt, &huart1 ) ;
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
-		//max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE ) ;
-
-//		if (   ( TimeSt.Hours > START_NIGHT_MODE_HOUR  )
-//			&& ( TimeSt.Hours < FINISH_NIGHT_MODE_HOUR )) {
-//			max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, WORK_MODE ) ;
-//			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-//		} else if 	( night_mode_flag == 1) {
-//			max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, OFF_MODE ) ;
-//			//max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
-//		}
 
 		if 	(  ( night_mode_flag == 1)
 			&& (( TimeSt.Hours > START_NIGHT_MODE_HOUR  )
