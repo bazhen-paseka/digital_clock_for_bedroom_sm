@@ -59,6 +59,9 @@
 */
 	uint8_t button_u8 = 0 ;
 	uint8_t night_mode_flag = 0 ;
+	uint32_t total_light_u32 = 0 ;
+	max7219_LED_Intensity	intensity_enum = Intensity_15 ;
+	max7219_LED_Intensity	previous_intensity_enum = Intensity_15 ;
 /*
 **************************************************************************
 *                        LOCAL FUNCTION PROTOTYPES
@@ -201,14 +204,10 @@ void Digit_clock_Main (void) {
 		sprintf(DataChar,"\r") ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
-		uint32_t light_u32 = ADC1_GetValue(&hadc1, 1) 	;
-		max7219_LED_Intensity	intensity_u8 = Intensity_1 ;
-		if ( light_u32 < LIGHT_LEVEL_0)															intensity_u8 = Intensity_1;
-		if ((light_u32 > (LIGHT_LEVEL_0 + LIGHT_LEVEL_OFFSET)) && (light_u32 < LIGHT_LEVEL_1))	intensity_u8 = Intensity_5;
-		if ((light_u32 > (LIGHT_LEVEL_1 + LIGHT_LEVEL_OFFSET)) && (light_u32 < LIGHT_LEVEL_2))	intensity_u8 = Intensity_9;
-		if ((light_u32 > (LIGHT_LEVEL_2 + LIGHT_LEVEL_OFFSET)))									intensity_u8 = Intensity_15;
+		uint32_t light_u32 = ADC1_GetValue( &hadc1, 1 ) ;
+		total_light_u32 = total_light_u32 + light_u32;
 
-		sprintf(DataChar,"L=%04i; I=%02d;  ", (int)light_u32 , (int)intensity_u8 ) ;
+		sprintf(DataChar,"Lux=%04lu; Int=%d;  ", light_u32, intensity_enum ) ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
@@ -219,12 +218,50 @@ void Digit_clock_Main (void) {
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
 
+		if ( TimeSt.Seconds == 00) {
+			uint32_t final_light_u32 = total_light_u32/60;
+
+			sprintf(DataChar,"\r\nTotal_l=%lu, final_l=%lu, ", total_light_u32, final_light_u32 ) ;
+			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+
+			total_light_u32 = 0;
+
+			if ( final_light_u32 <= LIGHT_LEVEL_MIN )	intensity_enum = Intensity_1;
+			if ( final_light_u32 >= LIGHT_LEVEL_MAX )	intensity_enum = Intensity_15;
+
+			if (   ( final_light_u32 > LIGHT_LEVEL_MIN )
+				&& ( final_light_u32 < LIGHT_LEVEL_MAX ))	{
+				uint32_t int_tmp_u32 = (uint32_t)(Intensity_15 - Intensity_1);
+				uint32_t tmp_u32 = int_tmp_u32 * (final_light_u32 - LIGHT_LEVEL_MIN) / (LIGHT_LEVEL_MAX - LIGHT_LEVEL_MIN) ;
+				intensity_enum = (uint8_t)tmp_u32;
+			}
+
+			sprintf(DataChar,"current int=%d, ", intensity_enum ) ;
+			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+
+			if (     (intensity_enum > previous_intensity_enum)
+				&& ( (intensity_enum - previous_intensity_enum) > 1 )) {
+				intensity_enum = previous_intensity_enum + 1;
+			}
+
+			if (     (intensity_enum < previous_intensity_enum)
+				&& ( (previous_intensity_enum - intensity_enum) > 1 )) {
+				intensity_enum = previous_intensity_enum - 1;
+			}
+
+			sprintf(DataChar,"next int=%d \r\n", intensity_enum ) ;
+			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+			previous_intensity_enum = intensity_enum;
+
+
+		}
+
 		if 	(  ( night_mode_flag == 1)
 			&& (( TimeSt.Hours > START_NIGHT_MODE_HOUR  )
 			|| ( TimeSt.Hours < FINISH_NIGHT_MODE_HOUR ))) {
-			max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, OFF_MODE ) ;
+			max7219_init(&h1_max7219, DECODE_MODE, intensity_enum, DISPLAY_DIGIT, OFF_MODE ) ;
 		} else {
-			max7219_init(&h1_max7219, DECODE_MODE, intensity_u8, DISPLAY_DIGIT, WORK_MODE ) ;
+			max7219_init(&h1_max7219, DECODE_MODE, intensity_enum, DISPLAY_DIGIT, WORK_MODE ) ;
 			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
 		}
 
