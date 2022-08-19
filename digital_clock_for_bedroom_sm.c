@@ -59,9 +59,7 @@
 */
 	uint8_t button_u8 = 0 ;
 	uint8_t night_mode_flag = 0 ;
-	uint32_t total_light_u32 = 0 ;
-	max7219_LED_Intensity	intensity_enum = Intensity_15 ;
-	max7219_LED_Intensity	previous_intensity_enum = Intensity_15 ;
+
 /*
 **************************************************************************
 *                        LOCAL FUNCTION PROTOTYPES
@@ -133,6 +131,12 @@ void Digit_clock_Main (void) {
 	char DataChar[100];
 	DS3231_TimeTypeDef		TimeSt ;
 	DS3231_DateTypeDef	 	DateSt ;
+
+	#define INTENSITY_MIN	Intensity_1
+	#define INTENSITY_MAX	Intensity_31
+	static max7219_LED_Intensity	intensity_enum			= INTENSITY_MAX ;
+	static max7219_LED_Intensity	previous_intensity_enum	= INTENSITY_MAX ;
+	static uint32_t 				total_light_u32 		= 0 ;
 
 	if ( button_u8 > 0 ) {
 
@@ -221,22 +225,22 @@ void Digit_clock_Main (void) {
 		if ( TimeSt.Seconds == 00) {
 			uint32_t final_light_u32 = total_light_u32/60;
 
-			sprintf(DataChar,"\r\nTotal_l=%lu, final_l=%lu, ", total_light_u32, final_light_u32 ) ;
+			sprintf(DataChar,"\r\ntotal Lux=%lu, final Lux=%lu, ", total_light_u32, final_light_u32 ) ;
 			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 			total_light_u32 = 0;
 
-			if ( final_light_u32 <= LIGHT_LEVEL_MIN )	intensity_enum = Intensity_1;
-			if ( final_light_u32 >= LIGHT_LEVEL_MAX )	intensity_enum = Intensity_15;
+			if ( final_light_u32 <= LIGHT_LEVEL_MIN )	intensity_enum = INTENSITY_MIN;
+			if ( final_light_u32 >= LIGHT_LEVEL_MAX )	intensity_enum = INTENSITY_MAX;
 
 			if (   ( final_light_u32 > LIGHT_LEVEL_MIN )
 				&& ( final_light_u32 < LIGHT_LEVEL_MAX ))	{
-				uint32_t int_tmp_u32 = (uint32_t)(Intensity_15 - Intensity_1);
+				uint32_t int_tmp_u32 = (uint32_t)(INTENSITY_MAX - INTENSITY_MIN);
 				uint32_t tmp_u32 = int_tmp_u32 * (final_light_u32 - LIGHT_LEVEL_MIN) / (LIGHT_LEVEL_MAX - LIGHT_LEVEL_MIN) ;
 				intensity_enum = (uint8_t)tmp_u32;
 			}
 
-			sprintf(DataChar,"current int=%d, ", intensity_enum ) ;
+			sprintf(DataChar,"current intensity=%d, ", intensity_enum ) ;
 			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 			if (     (intensity_enum > previous_intensity_enum)
@@ -249,11 +253,9 @@ void Digit_clock_Main (void) {
 				intensity_enum = previous_intensity_enum - 1;
 			}
 
-			sprintf(DataChar,"next int=%d \r\n", intensity_enum ) ;
+			sprintf(DataChar,"next intensity=%d \r\n", intensity_enum ) ;
 			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 			previous_intensity_enum = intensity_enum;
-
-
 		}
 
 		if 	(  ( night_mode_flag == 1)
