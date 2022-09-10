@@ -27,6 +27,7 @@
 **************************************************************************
 */
 
+	#define		LIGHT_CIRCLE_QNT	3
 /*
 **************************************************************************
 *							LOCAL CONSTANTS
@@ -222,8 +223,8 @@ void Digit_clock_Main (void) {
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
 
-		if ( TimeSt.Seconds == 00) {
-			uint32_t final_light_u32 = total_light_u32/60;
+		if ( TimeSt.Seconds % LIGHT_CIRCLE_QNT == 0) {
+			uint32_t final_light_u32 = total_light_u32 / LIGHT_CIRCLE_QNT;
 
 			sprintf(DataChar,"\r\ntotal Lux=%lu, final Lux=%lu, ", total_light_u32, final_light_u32 ) ;
 			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
