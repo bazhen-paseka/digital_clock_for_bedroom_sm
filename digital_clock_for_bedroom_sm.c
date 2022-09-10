@@ -27,6 +27,7 @@
 **************************************************************************
 */
 
+	#define		LIGHT_CIRCLE_QNT	3
 /*
 **************************************************************************
 *							LOCAL CONSTANTS
@@ -75,16 +76,16 @@
 void Digit_clock_Init (void) {
 	_beeper( 100 ) ;
 	int soft_version_arr_int[3];
-	soft_version_arr_int[0] = ((SOFT_VERSION) / 100) %10 ;
-	soft_version_arr_int[1] = ((SOFT_VERSION) /  10) %10 ;
-	soft_version_arr_int[2] = ((SOFT_VERSION)      ) %10 ;
+	soft_version_arr_int[0] = ((SOFT_VERSION) / 1000) %10 ;
+	soft_version_arr_int[1] = ((SOFT_VERSION) /   10) %100 ;
+	soft_version_arr_int[2] = ((SOFT_VERSION)       ) %10 ;
 
 	int16_t version_year_i16	= VERSION_YEAR	;
 	int16_t version_month_i16 	= VERSION_MONTH	;
 	int16_t version_day_i16		= VERSION_DAY	;
 
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\r\n\tDIEGO - dot clock for bedroom v%d.%d.%d %02d/%02d/%d" ,
+	sprintf(DataChar,"\r\n\r\n\tDIEGO - dot clock for bedroom v%d.%02d.%d %02d/%02d/%d" ,
 			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ,
 			version_day_i16 , version_month_i16 , version_year_i16 ) ;
 	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
@@ -120,8 +121,8 @@ void Digit_clock_Init (void) {
 	Max7219_struct_init (&h1_max7219, &hspi1,SPI1_CS_GPIO_Port,SPI1_CS_Pin);
 	//	max7219_test_LED( &h1_max7219 , 300 ) ;
 	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE);
-	max7219_show_time( &h1_max7219 , 100 + soft_version_arr_int[0] , (soft_version_arr_int[1]*10 + soft_version_arr_int[2]) ) ;
-
+	max7219_show_time( &h1_max7219 , 100 + soft_version_arr_int[0] , soft_version_arr_int[1] ) ;
+	HAL_Delay(1000);
 	HAL_GPIO_TogglePin( LED_RED_GPIO_Port , LED_RED_Pin ) ;
 	HAL_IWDG_Refresh( &hiwdg ) ;
 }
@@ -222,8 +223,8 @@ void Digit_clock_Main (void) {
 
 		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin ) ;
 
-		if ( TimeSt.Seconds == 00) {
-			uint32_t final_light_u32 = total_light_u32/60;
+		if ( TimeSt.Seconds % LIGHT_CIRCLE_QNT == 0) {
+			uint32_t final_light_u32 = total_light_u32 / LIGHT_CIRCLE_QNT;
 
 			sprintf(DataChar,"\r\ntotal Lux=%lu, final Lux=%lu, ", total_light_u32, final_light_u32 ) ;
 			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
