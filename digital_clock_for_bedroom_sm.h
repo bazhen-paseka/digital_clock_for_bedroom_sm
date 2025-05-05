@@ -68,9 +68,9 @@
 *                              FUNCTION PROTOTYPES
 **************************************************************************
 */
-	void Digit_clock_Init (void) ;
-	void Digit_clock_Main (void) ;
-	void Digit_clock_Set_button(uint8_t _button) ;
+	void Diego_Init (void) ;
+	void Diego_Main (void) ;
+
 /*
 **************************************************************************
 *                                   END
