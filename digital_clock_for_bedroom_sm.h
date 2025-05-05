@@ -24,7 +24,8 @@
 *								INCLUDE FILES
 **************************************************************************
 */
-	#include "stdio.h"
+	#include "Local_config.h"
+	#include <stdio.h>
 	#include <string.h>
 
 	#include "main.h"
@@ -33,9 +34,6 @@
 	#include "usart.h"
 	#include "iwdg.h"
 
-	#include "ds3231_local_config.h"
-	#include "max7219_local_config.h"
-	#include "digital_clock_for_bedroom_local_config.h"
 	#include "i2c_techmaker_sm.h"
 	#include "ds3231_sm.h"
 	#include "max7219_4x_dot_sm.h"

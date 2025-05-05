@@ -122,6 +122,7 @@ void Digit_clock_Init (void) {
 	//	max7219_test_LED( &h1_max7219 , 300 ) ;
 	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE);
 	max7219_show_time( &h1_max7219 , 100 + soft_version_arr_int[0] , soft_version_arr_int[1] ) ;
+	ADC1_Init( &hadc1, ADC_CHANNEL_1);
 	HAL_Delay(1000);
 	HAL_GPIO_TogglePin( LED_RED_GPIO_Port , LED_RED_Pin ) ;
 	HAL_IWDG_Refresh( &hiwdg ) ;
@@ -209,7 +210,7 @@ void Digit_clock_Main (void) {
 		sprintf(DataChar,"\r") ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
-		uint32_t light_u32 = ADC1_GetValue( &hadc1, 1 ) ;
+		uint32_t light_u32 = ADC1_GetValue( &hadc1, ADC_CHANNEL_1);
 		total_light_u32 = total_light_u32 + light_u32;
 
 		sprintf(DataChar,"Lux=%04lu; Int=%d;  ", light_u32, intensity_enum ) ;
