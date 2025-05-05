@@ -60,7 +60,7 @@
 */
 	char 	debugChar[100]	= {0};
 	uint8_t button_u8 		= 0 ;
-	uint8_t night_mode_flag = 0 ;
+	uint8_t night_mode_flag = 1 ;
 
 /*
 **************************************************************************
@@ -108,7 +108,7 @@ void Digit_clock_Init (void) {
 
 	Max7219_struct_init (&h1_max7219, &hspi1,SPI1_CS_GPIO_Port,SPI1_CS_Pin);
 	//	max7219_test_LED( &h1_max7219 , 300 ) ;
-	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE);
+	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY_INIT, DISPLAY_DIGIT, WORK_MODE);
 	max7219_show_time( &h1_max7219 , 100 + ver[0] , ver[1]*10 + ver[2]  ) ;
 	ADC1_Init( &hadc1, ADC_CHANNEL_1);
 	HAL_Delay(1000);
@@ -121,14 +121,11 @@ void Digit_clock_Main (void) {
 	DS3231_TimeTypeDef		TimeSt ;
 	DS3231_DateTypeDef	 	DateSt ;
 
-	#define INTENSITY_MIN	Intensity_1
-	#define INTENSITY_MAX	Intensity_31
 	static max7219_LED_Intensity	intensity_enum			= INTENSITY_MAX ;
 	static max7219_LED_Intensity	previous_intensity_enum	= INTENSITY_MAX ;
 	static uint32_t 				total_light_u32 		= 0 ;
 
 	if ( button_u8 > 0 ) {
-
 		_beeper( BEEPER_DELAY ) ;
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
@@ -155,14 +152,14 @@ void Digit_clock_Main (void) {
 
 		if ( button_u8 == 3 ) {
 			night_mode_flag = 1 ;
-			max7219_show_time( &h1_max7219, START_NIGHT_MODE_HOUR, FINISH_NIGHT_MODE_HOUR ) ;
-			sprintf( debugChar , "\r\n Night mode - On\r\n"); Debug(debugChar);
+			max7219_show_time( &h1_max7219, START_NIGHT_MODE_HOUR, 00) ;
+			//sprintf( debugChar , "\r\n Night mode - On\r\n"); Debug(debugChar);
 		}
 
 		if ( button_u8 == 4 ) {
-			night_mode_flag = 0 ;
-			max7219_show_time( &h1_max7219 , 00 , 00 ) ;
-			sprintf( debugChar , "\r\n Night mode - Off\r\n"); Debug(debugChar);
+			night_mode_flag = 1 ;
+			max7219_show_time( &h1_max7219 , FINISH_NIGHT_MODE_HOUR, 00 ) ;
+			//sprintf( debugChar , "\r\n Night mode - Off\r\n"); Debug(debugChar);
 		}
 
 		if ( button_u8 == 5 ) {
@@ -239,18 +236,18 @@ void Digit_clock_Main (void) {
 			previous_intensity_enum = intensity_enum;
 		}
 
-		if 	(  ( night_mode_flag == 1)
-			&& (( TimeSt.Hours > START_NIGHT_MODE_HOUR  )
-			|| ( TimeSt.Hours < FINISH_NIGHT_MODE_HOUR ))) {
-			max7219_init(&h1_max7219, DECODE_MODE, intensity_enum, DISPLAY_DIGIT, OFF_MODE ) ;
+		if (  ( night_mode_flag == 1)
+		    && (   ( TimeSt.Hours >= START_NIGHT_MODE_HOUR  )
+			    || ( TimeSt.Hours <  FINISH_NIGHT_MODE_HOUR ))) {
+			max7219_init(&h1_max7219, DECODE_MODE, Intensity_1, DISPLAY_DIGIT, WORK_MODE);
 		} else {
-			max7219_init(&h1_max7219, DECODE_MODE, intensity_enum, DISPLAY_DIGIT, WORK_MODE ) ;
-			max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes ) ;
+			max7219_init(&h1_max7219, DECODE_MODE, intensity_enum, DISPLAY_DIGIT, WORK_MODE);
 		}
+		max7219_show_time( &h1_max7219 , TimeSt.Hours , TimeSt.Minutes );
 
-		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 ) ;
-		Ds3231_hard_alarm_flag_Reset() ;
-		HAL_IWDG_Refresh( &hiwdg ) ;
+		ds3231_Alarm1_ClearStatusBit( ADR_I2C_DS3231 );
+		Ds3231_hard_alarm_flag_Reset();
+		HAL_IWDG_Refresh( &hiwdg );
 	}
 }
 
