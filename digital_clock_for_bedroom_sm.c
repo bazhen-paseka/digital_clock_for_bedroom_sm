@@ -58,7 +58,8 @@
 *						    GLOBAL VARIABLES
 **************************************************************************
 */
-	uint8_t button_u8 = 0 ;
+	char 	debugChar[100]	= {0};
+	uint8_t button_u8 		= 0 ;
 	uint8_t night_mode_flag = 0 ;
 
 /*
@@ -67,6 +68,7 @@
 **************************************************************************
 */
 	void _beeper( uint32_t _time_u32 ) ;
+	void Debug	(char* _text);
 /*
 **************************************************************************
 *                           GLOBAL FUNCTIONS
@@ -75,29 +77,16 @@
 
 void Digit_clock_Init (void) {
 	_beeper( 100 ) ;
-	int soft_version_arr_int[3];
-	soft_version_arr_int[0] = ((SOFT_VERSION) / 1000) %10 ;
-	soft_version_arr_int[1] = ((SOFT_VERSION) /   10) %100 ;
-	soft_version_arr_int[2] = ((SOFT_VERSION)       ) %10 ;
+	int ver[3];
+	ver[0] = ((SOFT_VERSION) / 100) %10 ;
+	ver[1] = ((SOFT_VERSION) /  10) %10 ;
+	ver[2] = ((SOFT_VERSION)      ) %10 ;
 
-	int16_t version_year_i16	= VERSION_YEAR	;
-	int16_t version_month_i16 	= VERSION_MONTH	;
-	int16_t version_day_i16		= VERSION_DAY	;
-
-	char DataChar[100];
-	sprintf(DataChar,"\r\n\r\n\tDIEGO - dot clock for bedroom v%d.%02d.%d %02d/%02d/%d" ,
-			soft_version_arr_int[0] , soft_version_arr_int[1] , soft_version_arr_int[2] ,
-			version_day_i16 , version_month_i16 , version_year_i16 ) ;
-	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
-
+	sprintf(debugChar,"\r\n\r\n\tDIEGO - dot clock for bedroom v%d.%d.%d",ver[0], ver[1], ver[2]); Debug(debugChar);
 	#define DATE_as_int_str 	(__DATE__)
 	#define TIME_as_int_str 	(__TIME__)
-	sprintf(DataChar,"\r\n\tBuild: %s. Time: %s." , DATE_as_int_str , TIME_as_int_str ) ;
-	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
-
-	sprintf(DataChar,"\r\n\tFor debug: UART1-115200/8-N-1" ) ;
-	HAL_UART_Transmit( &huart1, (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
-
+	sprintf(debugChar,"\r\n\tBuild: %s. Time: %s." , DATE_as_int_str , TIME_as_int_str); Debug(debugChar);
+	sprintf(debugChar,"\r\n\tFor debug: UART1-115200/8-N-1"); Debug(debugChar);
 
 	I2Cdev_init( &hi2c1 ) ;
 	I2C_ScanBusFlow( &hi2c1 , &huart1 ) ;
@@ -111,8 +100,7 @@ void Digit_clock_Init (void) {
 	ds3231_PrintDate( 		&DateSt , &huart1 ) ;
 	ds3231_PrintWeek_3Char(	&DateSt , &huart1 ) ;
 	ds3231_PrintTime( 		&TimeSt , &huart1 ) ;
-	sprintf( DataChar , "\r\n" ) ;
-	HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+	sprintf( debugChar , "\r\n"); Debug(debugChar);
 
 	//ds3231_Alarm1_SetSeconds(ADR_I2C_DS3231, 0x00) ;
 	ds3231_Alarm1_SetEverySeconds( ADR_I2C_DS3231 ) ;
@@ -121,7 +109,7 @@ void Digit_clock_Init (void) {
 	Max7219_struct_init (&h1_max7219, &hspi1,SPI1_CS_GPIO_Port,SPI1_CS_Pin);
 	//	max7219_test_LED( &h1_max7219 , 300 ) ;
 	max7219_init(&h1_max7219, DECODE_MODE, INTENSITY, DISPLAY_DIGIT, WORK_MODE);
-	max7219_show_time( &h1_max7219 , 100 + soft_version_arr_int[0] , soft_version_arr_int[1] ) ;
+	max7219_show_time( &h1_max7219 , 100 + ver[0] , ver[1]*10 + ver[2]  ) ;
 	ADC1_Init( &hadc1, ADC_CHANNEL_1);
 	HAL_Delay(1000);
 	HAL_GPIO_TogglePin( LED_RED_GPIO_Port , LED_RED_Pin ) ;
@@ -130,7 +118,6 @@ void Digit_clock_Init (void) {
 //***************************************************************************
 
 void Digit_clock_Main (void) {
-	char DataChar[100];
 	DS3231_TimeTypeDef		TimeSt ;
 	DS3231_DateTypeDef	 	DateSt ;
 
@@ -169,15 +156,13 @@ void Digit_clock_Main (void) {
 		if ( button_u8 == 3 ) {
 			night_mode_flag = 1 ;
 			max7219_show_time( &h1_max7219, START_NIGHT_MODE_HOUR, FINISH_NIGHT_MODE_HOUR ) ;
-			sprintf( DataChar , "\r\n Night mode - On\r\n" ) ;
-			HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+			sprintf( debugChar , "\r\n Night mode - On\r\n"); Debug(debugChar);
 		}
 
 		if ( button_u8 == 4 ) {
 			night_mode_flag = 0 ;
 			max7219_show_time( &h1_max7219 , 00 , 00 ) ;
-			sprintf( DataChar , "\r\n Night mode - Off\r\n" ) ;
-			HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+			sprintf( debugChar , "\r\n Night mode - Off\r\n"); Debug(debugChar);
 		}
 
 		if ( button_u8 == 5 ) {
@@ -206,15 +191,12 @@ void Digit_clock_Main (void) {
 	}
 
 	if ( Ds3231_hard_alarm_flag_Status() == 1 ) {
-		char DataChar[100] ;
-		sprintf(DataChar,"\r") ;
-		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+		sprintf(debugChar,"\r"); Debug(debugChar);
 
 		uint32_t light_u32 = ADC1_GetValue( &hadc1, ADC_CHANNEL_1);
 		total_light_u32 = total_light_u32 + light_u32;
 
-		sprintf(DataChar,"Lux=%04lu; Int=%d;  ", light_u32, intensity_enum ) ;
-		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+		sprintf(debugChar,"Lux=%04lu; Int=%d;  ", light_u32, intensity_enum); Debug(debugChar);
 
 		ds3231_GetTime( ADR_I2C_DS3231, &TimeSt ) ;
 		ds3231_GetDate( ADR_I2C_DS3231, &DateSt ) ;
@@ -227,8 +209,7 @@ void Digit_clock_Main (void) {
 		if ( TimeSt.Seconds % LIGHT_CIRCLE_QNT == 0) {
 			uint32_t final_light_u32 = total_light_u32 / LIGHT_CIRCLE_QNT;
 
-			sprintf(DataChar,"\r\ntotal Lux=%lu, final Lux=%lu, ", total_light_u32, final_light_u32 ) ;
-			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+			sprintf(debugChar,"\r\ntotal Lux=%lu, final Lux=%lu, ", total_light_u32, final_light_u32); Debug(debugChar);
 
 			total_light_u32 = 0;
 
@@ -242,8 +223,7 @@ void Digit_clock_Main (void) {
 				intensity_enum = (uint8_t)tmp_u32;
 			}
 
-			sprintf(DataChar,"current intensity=%d, ", intensity_enum ) ;
-			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+			sprintf(debugChar,"current intensity=%d, ", intensity_enum); Debug(debugChar);
 
 			if (     (intensity_enum > previous_intensity_enum)
 				&& ( (intensity_enum - previous_intensity_enum) > 1 )) {
@@ -255,8 +235,7 @@ void Digit_clock_Main (void) {
 				intensity_enum = previous_intensity_enum - 1;
 			}
 
-			sprintf(DataChar,"next intensity=%d \r\n", intensity_enum ) ;
-			HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+			sprintf(debugChar,"next intensity=%d \r\n", intensity_enum); Debug(debugChar);
 			previous_intensity_enum = intensity_enum;
 		}
 
@@ -285,12 +264,18 @@ void _beeper( uint32_t _time_u32 ) {
 	HAL_GPIO_WritePin( BEEPER_1_GPIO_Port , BEEPER_1_Pin , RESET ) ;
 	HAL_Delay( _time_u32 ) ;
 	HAL_GPIO_WritePin( BEEPER_1_GPIO_Port , BEEPER_1_Pin , SET ) ;
-}
-/***************************************************************************************/
+} //***************************************************************************************
 
 void Digit_clock_Set_button(uint8_t _button) {
 	button_u8 = _button ;
-}
+} //***************************************************************************************
+
+void Debug(char* _text) {
+	HAL_UART_Transmit(&huart1, (uint8_t *)_text, strlen(_text), 100);
+} //***************************************************************************************
+
+//***************************************************************************************
+//***************************************************************************************
 /*
 **************************************************************************
 *                                   END
