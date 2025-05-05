@@ -263,14 +263,35 @@ void _beeper( uint32_t _time_u32 ) {
 	HAL_GPIO_WritePin( BEEPER_1_GPIO_Port , BEEPER_1_Pin , SET ) ;
 } //***************************************************************************************
 
-void Digit_clock_Set_button(uint8_t _button) {
-	button_u8 = _button ;
-} //***************************************************************************************
-
 void Debug(char* _text) {
 	HAL_UART_Transmit(&huart1, (uint8_t *)_text, strlen(_text), 100);
 } //***************************************************************************************
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {	//	irqq pin
+	if ( GPIO_Pin == BUTTON_1_Pin 	) {
+		button_u8 = 1;
+	}
+
+	if ( GPIO_Pin == BUTTON_2_Pin 	) {
+		button_u8 = 2;
+	}
+
+	if ( GPIO_Pin == BUTTON_3_Pin 	) {
+		button_u8 = 3;
+	}
+
+	if ( GPIO_Pin == BUTTON_4_Pin 	) {
+		button_u8 = 4;
+	}
+
+	if ( GPIO_Pin == BUTTON_5_Pin 	) {
+		button_u8 = 5;
+	}
+
+	if ( GPIO_Pin == BUTTON_6_Pin 	) {
+		button_u8 = 6;
+	}
+}
 //***************************************************************************************
 //***************************************************************************************
 /*
