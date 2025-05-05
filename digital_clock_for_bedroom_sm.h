@@ -68,8 +68,8 @@
 *                              FUNCTION PROTOTYPES
 **************************************************************************
 */
-	void Digit_clock_Init (void) ;
-	void Digit_clock_Main (void) ;
+	void Diego_Init (void) ;
+	void Diego_Main (void) ;
 
 /*
 **************************************************************************
